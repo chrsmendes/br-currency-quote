@@ -1,0 +1,78 @@
+name: Deploy static content to Pages
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "."
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          preview: ${{ github.event_name == 'pull_request' }}
+
+      - name: Set deployment URL
+        if: ${{ github.event_name == 'pull_request' }}
+        run: echo "DEPLOY_URL=${{ steps.deployment.outputs.page_url }}" >> $GITHUB_ENV
+
+      - name: Deploy PR to subdirectory
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          pr_number=${{ github.event.pull_request.number }}
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git fetch origin gh-pages || true
+          git checkout gh-pages || git checkout -b gh-pages
+          mkdir -p "pr-${pr_number}"
+          rm -rf "pr-${pr_number}/*"
+          rsync -av --exclude='pr-${pr_number}' ./ "pr-${pr_number}/"
+          git add "pr-${pr_number}"
+          git commit -m "Update PR #${pr_number}" || echo "No changes to commit"
+          git push origin gh-pages
+          echo "PR_URL=[invalid url, do not cite] github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${pr_number}/" >> $GITHUB_ENV
+
+      - name: Comment on Pull Request
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const previewUrl = process.env.DEPLOY_URL;
+            const prUrl = process.env.PR_URL;
+            const commentBody = `🚀 Deployment successful!\n\n🌐 **Preview URL (this commit)**: [${previewUrl}](${previewUrl})\n🌐 **PR URL (latest)**: [${prUrl}](${prUrl})`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: commentBody,
+            });
