@@ -34,25 +34,33 @@ jobs:
       - name: Deploy PR to subdirectory
         if: ${{ github.event_name == 'pull_request' }}
         run: |
+          echo "Deploying PR to subdirectory"
           pr_number=${{ github.event.pull_request.number }}
+
+          echo "Deploying PR #${pr_number} to subdirectory"
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
           # Configure git to use the GITHUB_TOKEN for authentication
+          echo "Configuring git to use GITHUB_TOKEN"
           git remote set-url origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
 
           # Fetch and checkout with better error handling
+          echo "Fetching and checking out gh-pages branch"
           git fetch origin gh-pages || echo "No gh-pages branch yet"
           git checkout gh-pages || git checkout -b gh-pages
 
           # Replace all content in gh-pages except directories starting with 'pr'
+          echo "Cleaning up gh-pages directory"
           find . -maxdepth 1 -type d ! -name 'pr-*' ! -name '.' -exec rm -rf {} +
           find . -maxdepth 1 -type f -exec rm -f {} +
 
           # Copy content excluding .github directory
+          echo "Copying content excluding .github directory"
           rsync -av --exclude=".git" --exclude=".github" ./ ./
 
           # Delete existing PR directory if it exists
+          echo "Checking for existing PR directory"
           if git rev-parse --verify --quiet "pr-${pr_number}"; then
             echo "Deleting existing pr-${pr_number} directory"
             git rm -rf "pr-${pr_number}"
@@ -64,19 +72,24 @@ jobs:
           rm -rf "pr-${pr_number:?}"/* || echo "Directory was empty"
 
           # Copy content excluding .github directory
+          echo "Copying content to pr-${pr_number} directory"
           rsync -av --exclude=".git" --exclude=".github" --exclude="pr-${pr_number}" ./ "pr-${pr_number}/"
 
           # If the .github directory exists in gh-pages, remove it
+          echo "Checking for .github directory in gh-pages"
           if [ -d ".github" ]; then
-            rm -rf "pr-${pr_number}/.github"
+            echo "Removing .github directory from gh-pages"
+            rm -rf ".github"
           fi
 
           # Commit and push
+          echo "Committing and pushing changes"
           git add "pr-${pr_number}"
           git commit -m "Update PR #${pr_number}" || echo "No changes to commit"
           git push origin gh-pages
 
           # Add a comment to the pull request with the URL
+          echo "Adding comment to pull request"
           pr_url="https://${{ github.repository_owner }}.github.io/${{ github.repository }}/pr-${pr_number}"
           curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
