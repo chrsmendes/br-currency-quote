@@ -21,29 +21,15 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: "."
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-        with:
-          preview: ${{ github.event_name == 'pull_request' }}
-
-      - name: Set deployment URL
-        if: ${{ github.event_name == 'pull_request' }}
-        run: echo "DEPLOY_URL=${{ steps.deployment.outputs.page_url }}" >> $GITHUB_ENV
 
       - name: Deploy PR to subdirectory
         if: ${{ github.event_name == 'pull_request' }}
@@ -71,21 +57,9 @@ jobs:
           git commit -m "Update PR #${pr_number}" || echo "No changes to commit"
           git push origin gh-pages
 
-          # Fix the PR_URL syntax
-          echo "PR_URL=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${pr_number}/" >> $GITHUB_ENV
-
-      - name: Comment on Pull Request
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const prNumber = context.payload.pull_request.number;
-            const previewUrl = process.env.DEPLOY_URL;
-            const prUrl = process.env.PR_URL;
-            const commentBody = `🚀 Deployment successful!\n\n🌐 **Preview URL (this commit)**: [${previewUrl}](${previewUrl})\n🌐 **PR URL (latest)**: [${prUrl}](${prUrl})`;
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              body: commentBody,
-            });
+          # Add a comment to the pull request with the URL
+          pr_url="https://${{ github.repository_owner }}.github.io/${{ github.repository }}/pr-${pr_number}"
+          curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+            -d "{\"body\": \"Preview URL: ${pr_url}\"}"
