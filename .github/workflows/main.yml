@@ -45,6 +45,13 @@ jobs:
           git fetch origin gh-pages || echo "No gh-pages branch yet"
           git checkout gh-pages || git checkout -b gh-pages
 
+          # Replace all content in gh-pages except directories starting with 'pr'
+          find . -maxdepth 1 -type d ! -name 'pr-*' ! -name '.' -exec rm -rf {} +
+          find . -maxdepth 1 -type f -exec rm -f {} +
+
+          # Copy content excluding .github directory
+          rsync -av --exclude=".git" --exclude=".github" ./ ./
+
           # Delete existing PR directory if it exists
           if git rev-parse --verify --quiet "pr-${pr_number}"; then
             echo "Deleting existing pr-${pr_number} directory"
