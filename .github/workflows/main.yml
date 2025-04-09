@@ -45,6 +45,13 @@ jobs:
           echo "Configuring git to use GITHUB_TOKEN"
           git remote set-url origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
 
+          # Ensure the directory is a valid Git repository
+          if [ ! -d ".git" ]; then
+            echo "Initializing Git repository"
+            git init
+            git remote add origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+          fi
+
           # Fetch and checkout with better error handling
           echo "Fetching and checking out gh-pages branch"
           git fetch origin gh-pages || echo "No gh-pages branch yet"
