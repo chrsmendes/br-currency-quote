@@ -50,8 +50,22 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
         with:
-          branch: "gh-pages-${{ github.event.pull_request.number || 'main' }}"
-          clean: true
+          artifact_name: "github-pages"
+          preview: ${{ github.event_name == 'pull_request' }}
+
+      - name: Move PR Deployment to Subdirectory
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          pr_number=${{ github.event.pull_request.number }}
+          mkdir -p "pr-${pr_number}"
+          mv * "pr-${pr_number}/"
+          echo "Deployed to subdirectory: pr-${pr_number}"
+
+      - name: Deploy Main Branch
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          echo "Deploying to main branch URL"
+          # No subdirectory needed for main branch
 
       - name: Comment on Pull Request
         if: ${{ github.event_name == 'pull_request' }}
@@ -59,7 +73,7 @@ jobs:
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
-            const deployUrl = `https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/gh-pages-${prNumber}/`;
+            const deployUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/gh-pages-${prNumber}/index.html`;
             const commentBody = `🚀 Deployment successful!\n\n🌐 **Preview URL**: [${deployUrl}](${deployUrl})`;
 
             await github.rest.issues.createComment({
