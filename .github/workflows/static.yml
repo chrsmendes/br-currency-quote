@@ -55,11 +55,11 @@ jobs:
           git checkout gh-pages || git checkout -b gh-pages
           mkdir -p "pr-${pr_number}"
           rm -rf "pr-${pr_number}/*"
-          cp -r ./* "pr-${pr_number}/"
+          rsync -av --exclude='pr-${pr_number}' ./ "pr-${pr_number}/"
           git add "pr-${pr_number}"
           git commit -m "Update PR #${pr_number}" || echo "No changes to commit"
           git push origin gh-pages
-          echo "PR_URL=[invalid url, do not cite] github.repository_owner }}.github.io/${{ github.repository }}/pr-${pr_number}/" >> $GITHUB_ENV
+          echo "PR_URL=[invalid url, do not cite] github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${pr_number}/" >> $GITHUB_ENV
 
       - name: Comment on Pull Request
         if: ${{ github.event_name == 'pull_request' }}
