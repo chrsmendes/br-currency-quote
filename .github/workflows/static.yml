@@ -58,7 +58,8 @@ jobs:
         run: |
           pr_number=${{ github.event.pull_request.number }}
           mkdir -p "pr-${pr_number}"
-          mv * "pr-${pr_number}/"
+          shopt -s extglob
+          mv !(pr-${pr_number}) "pr-${pr_number}/"
           echo "Deployed to subdirectory: pr-${pr_number}"
 
       - name: Deploy Main Branch
