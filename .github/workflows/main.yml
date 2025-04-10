@@ -1,0 +1,124 @@
+name: Sync Main to GitHub Pages with PR Previews
+description: |
+  This workflow automates updates to the gh-pages branch based on activity in the main branch.
+  - On push to main: It syncs the main branch content to gh-pages, excluding the .github folder, while preserving existing pull request folders (pr-*).
+  - On pull request to main: It copies the pull request content into a dedicated folder (pr-<PR number>) in gh-pages, excluding .github, and comments the PR with a preview URL (https://chrsmendes.github.io/br-currency-quote/pr-<PR number>).
+  - On push to gh-pages: It skips any action, as gh-pages is the deployment branch for GitHub Pages.
+  - If gh-pages doesn’t exist: It creates an empty gh-pages branch.
+  The workflow can also be triggered manually via workflow_dispatch.
+
+on:
+  push:
+    branches: ["main", "gh-pages"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create gh-pages branch if it doesn’t exist
+        run: |
+          git fetch origin
+          if ! git ls-remote --heads origin gh-pages | grep -q gh-pages; then
+            git checkout --orphan gh-pages
+            git rm -rf .
+            git fetch origin main
+            git checkout origin/main -- .
+            git add .
+            git commit -m "Initialize gh-pages branch with main content"
+            git push origin gh-pages
+          fi
+
+      - name: Skip deploy to github-pages from non-gh-pages branches
+        if: github.ref != 'refs/heads/gh-pages'
+        run: |
+          echo "Skipping deploy as this is not the gh-pages branch."
+          exit 0
+
+      - name: Handle pull request to main
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          git fetch origin main
+          git fetch origin gh-pages
+          git checkout gh-pages
+
+          # Garantir que o repositório Git está configurado
+          if [ ! -d ".git" ]; then
+            echo "Repositório Git não encontrado. Inicializando novamente."
+            git init
+            git remote add origin https://github.com/${{ github.repository }}
+            git fetch origin
+            git checkout gh-pages
+          fi
+
+          # Sincronizar conteúdo fora de pr-* com a branch main
+          find . -maxdepth 1 ! -name 'pr-*' ! -name '.' ! -name '..' ! -name '.git' -exec rm -rf {} \;
+          git checkout origin/main -- .
+          rm -rf .github
+          git add .
+          git commit -m "Sync main content to gh-pages" || echo "No changes to commit"
+
+          # Atualizar conteúdo do PR
+          mkdir -p pr-$PR_NUMBER
+          rm -rf pr-$PR_NUMBER/*
+          git checkout ${{ github.event.pull_request.head.sha }} -- .
+          rsync -av --exclude='.github' --exclude='.git' . pr-$PR_NUMBER/
+          rm -rf pr-$PR_NUMBER/.git
+          git add pr-$PR_NUMBER
+          git commit -m "Update PR #$PR_NUMBER content" || echo "No changes to commit"
+          git push origin gh-pages
+          echo "PR_URL=https://chrsmendes.github.io/br-currency-quote/pr-$PR_NUMBER" >> $GITHUB_ENV
+
+      - name: Comment PR with preview URL
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prNumber = ${{ github.event.pull_request.number }};
+            const url = process.env.PR_URL;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: `Preview available at: ${url}`
+            });
+
+      - name: Handle push to main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git fetch origin gh-pages
+          git checkout gh-pages
+          git checkout main -- .
+          rm -rf .github
+          find . -type d -name "pr-*" -exec rm -rf {}/.git \; # Remover configurações de submódulo de pastas pr-*
+          git add .
+          git commit -m "Sync main to gh-pages" || echo "No changes to commit"
+          git push origin gh-pages
+
+      - name: Skip push to gh-pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/gh-pages'
+        run: |
+          echo "Push to gh-pages detected, no action required."
