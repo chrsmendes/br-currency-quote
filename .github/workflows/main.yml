@@ -61,13 +61,23 @@ jobs:
         if: github.event_name == 'pull_request' && github.base_ref == 'main'
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
+          git fetch origin main
           git fetch origin gh-pages
           git checkout gh-pages
+
+          # Sincronizar conteúdo fora de pr-* com a branch main
+          find . -maxdepth 1 ! -name 'pr-*' ! -name '.' ! -name '..' -exec rm -rf {} \;
+          git checkout origin/main -- .
+          rm -rf .github
+          git add .
+          git commit -m "Sync main content to gh-pages" || echo "No changes to commit"
+
+          # Atualizar conteúdo do PR
           mkdir -p pr-$PR_NUMBER
           rm -rf pr-$PR_NUMBER/*
           git checkout ${{ github.event.pull_request.head.sha }} -- .
-          rsync -av --exclude='.github' --exclude='.git' . pr-$PR_NUMBER/ # Excluir .git e .github
-          rm -rf pr-$PR_NUMBER/.git # Garantir que .git não seja incluído
+          rsync -av --exclude='.github' --exclude='.git' . pr-$PR_NUMBER/
+          rm -rf pr-$PR_NUMBER/.git
           git add pr-$PR_NUMBER
           git commit -m "Update PR #$PR_NUMBER content" || echo "No changes to commit"
           git push origin gh-pages
