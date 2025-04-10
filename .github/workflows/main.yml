@@ -65,28 +65,21 @@ jobs:
           git fetch origin gh-pages
           git checkout gh-pages
 
-          # Garantir que o repositório Git está configurado
-          if [ ! -d ".git" ]; then
-            echo "Repositório Git não encontrado. Inicializando novamente."
-            git init
-            git remote add origin https://github.com/${{ github.repository }}
-            git fetch origin
-            git checkout gh-pages
-          fi
-
-          # Sincronizar conteúdo fora de pr-* com a branch main
-          find . -maxdepth 1 ! -name 'pr-*' ! -name '.' ! -name '..' ! -name '.git' -exec rm -rf {} \;
-          git checkout origin/main -- .
-          rm -rf .github
-          git add .
-          git commit -m "Sync main content to gh-pages" || echo "No changes to commit"
-
-          # Atualizar conteúdo do PR
+          # Criar ou limpar diretório da PR
           mkdir -p pr-$PR_NUMBER
           rm -rf pr-$PR_NUMBER/*
-          git checkout ${{ github.event.pull_request.head.sha }} -- .
-          rsync -av --exclude='.github' --exclude='.git' . pr-$PR_NUMBER/
-          rm -rf pr-$PR_NUMBER/.git
+
+          # Checkout temporário do PR em uma pasta separada
+          TEMP_DIR=$(mktemp -d)
+          git worktree add $TEMP_DIR ${{ github.event.pull_request.head.sha }}
+
+          # Copiar arquivos do PR para a pasta pr-X
+          rsync -av --exclude='.github' --exclude='.git' $TEMP_DIR/ pr-$PR_NUMBER/
+
+          # Limpar worktree temporário
+          git worktree remove $TEMP_DIR
+
+          # Adicionar e comitar apenas as mudanças na pasta pr-X
           git add pr-$PR_NUMBER
           git commit -m "Update PR #$PR_NUMBER content" || echo "No changes to commit"
           git push origin gh-pages
