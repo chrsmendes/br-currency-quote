@@ -1,4 +1,11 @@
-name: Deploy static content to Pages
+name: Sync Main to GitHub Pages with PR Previews
+description: |
+  This workflow automates updates to the gh-pages branch based on activity in the main branch.
+  - On push to main: It syncs the main branch content to gh-pages, excluding the .github folder, while preserving existing pull request folders (pr-*).
+  - On pull request to main: It copies the pull request content into a dedicated folder (pr-<PR number>) in gh-pages, excluding .github, and comments the PR with a preview URL (https://chrsmendes.github.io/br-currency-quote/pr-<PR number>).
+  - On push to gh-pages: It skips any action, as gh-pages is the deployment branch for GitHub Pages.
+  - If gh-pages doesn’t exist: It creates an empty gh-pages branch.
+  The workflow can also be triggered manually via workflow_dispatch.
 
 on:
   push:
@@ -23,55 +30,88 @@ jobs:
       name: github-pages
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: "."
-
-      - name: Deploy PR to subdirectory
-        if: ${{ github.event_name == 'pull_request' }}
+      - name: Set up Git
         run: |
-          pr_number=${{ github.event.pull_request.number }}
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Configure git to use the GITHUB_TOKEN for authentication
-          git remote set-url origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
-
-          # Fetch and checkout with better error handling
-          git fetch origin gh-pages || echo "No gh-pages branch yet"
-          git checkout gh-pages || git checkout -b gh-pages
-
-          # Delete existing PR directory if it exists
-          if git rev-parse --verify --quiet "pr-${pr_number}"; then
-            echo "Deleting existing pr-${pr_number} directory"
-            git rm -rf "pr-${pr_number}"
+      - name: Create gh-pages branch if it doesn’t exist
+        run: |
+          git fetch origin
+          if ! git ls-remote --heads origin gh-pages | grep -q gh-pages; then
+            git checkout --orphan gh-pages
+            git rm -rf .
+            git fetch origin main
+            git checkout origin/main -- .
+            git add .
+            git commit -m "Initialize gh-pages branch with main content"
+            git push origin gh-pages
           fi
 
-          # Create a new directory for the PR
-          echo "Creating new directory for PR #${pr_number}"
-          mkdir -p "pr-${pr_number}"
-          rm -rf "pr-${pr_number:?}"/* || echo "Directory was empty"
+      - name: Skip deploy to github-pages from non-gh-pages branches
+        if: github.ref != 'refs/heads/gh-pages'
+        run: |
+          echo "Skipping deploy as this is not the gh-pages branch."
+          exit 0
 
-          # Copy content excluding .github directory
-          rsync -av --exclude=".git" --exclude=".github" --exclude="pr-${pr_number}" ./ "pr-${pr_number}/"
+      - name: Handle pull request to main
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          git fetch origin main
+          git fetch origin gh-pages
+          git checkout gh-pages
 
-          # If the .github directory exists in gh-pages, remove it
-          if [ -d ".github" ]; then
-            rm -rf "pr-${pr_number}/.github"
-          fi
+          # Criar ou limpar diretório da PR
+          mkdir -p pr-$PR_NUMBER
+          rm -rf pr-$PR_NUMBER/*
 
-          # Commit and push
-          git add "pr-${pr_number}"
-          git commit -m "Update PR #${pr_number}" || echo "No changes to commit"
+          # Checkout temporário do PR em uma pasta separada
+          TEMP_DIR=$(mktemp -d)
+          git worktree add $TEMP_DIR ${{ github.event.pull_request.head.sha }}
+
+          # Copiar arquivos do PR para a pasta pr-X
+          rsync -av --exclude='.github' --exclude='.git' $TEMP_DIR/ pr-$PR_NUMBER/
+
+          # Limpar worktree temporário
+          git worktree remove $TEMP_DIR
+
+          # Adicionar e comitar apenas as mudanças na pasta pr-X
+          git add pr-$PR_NUMBER
+          git commit -m "Update PR #$PR_NUMBER content" || echo "No changes to commit"
+          git push origin gh-pages
+          echo "PR_URL=https://chrsmendes.github.io/br-currency-quote/pr-$PR_NUMBER" >> $GITHUB_ENV
+
+      - name: Comment PR with preview URL
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prNumber = ${{ github.event.pull_request.number }};
+            const url = process.env.PR_URL;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: `Preview available at: ${url}`
+            });
+
+      - name: Handle push to main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git fetch origin gh-pages
+          git checkout gh-pages
+          git checkout main -- .
+          rm -rf .github
+          find . -type d -name "pr-*" -exec rm -rf {}/.git \; # Remover configurações de submódulo de pastas pr-*
+          git add .
+          git commit -m "Sync main to gh-pages" || echo "No changes to commit"
           git push origin gh-pages
 
-          # Add a comment to the pull request with the URL
-          pr_url="https://${{ github.repository_owner }}.github.io/${{ github.repository }}/pr-${pr_number}"
-          curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-            -d "{\"body\": \"Preview URL: ${pr_url}\"}"
+      - name: Skip push to gh-pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/gh-pages'
+        run: |
+          echo "Push to gh-pages detected, no action required."
