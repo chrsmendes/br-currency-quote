@@ -61,6 +61,7 @@ jobs:
           rm -rf pr-$PR_NUMBER/*
           git checkout ${{ github.event.pull_request.head.sha }} -- .
           rsync -av --exclude='.github' . pr-$PR_NUMBER/
+          git rm --cached pr-$PR_NUMBER/.git || true
           git add pr-$PR_NUMBER
           git commit -m "Update PR #$PR_NUMBER content" || echo "No changes to commit"
           git push origin gh-pages
