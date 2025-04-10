@@ -51,6 +51,12 @@ jobs:
             git push origin gh-pages
           fi
 
+      - name: Skip deploy to github-pages from non-gh-pages branches
+        if: github.ref != 'refs/heads/gh-pages'
+        run: |
+          echo "Skipping deploy as this is not the gh-pages branch."
+          exit 0
+
       - name: Handle pull request to main
         if: github.event_name == 'pull_request' && github.base_ref == 'main'
         run: |
