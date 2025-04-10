@@ -65,6 +65,15 @@ jobs:
           git fetch origin gh-pages
           git checkout gh-pages
 
+          # Garantir que o repositório Git está configurado
+          if [ ! -d ".git" ]; then
+            echo "Repositório Git não encontrado. Inicializando novamente."
+            git init
+            git remote add origin https://github.com/${{ github.repository }}
+            git fetch origin
+            git checkout gh-pages
+          fi
+
           # Sincronizar conteúdo fora de pr-* com a branch main
           find . -maxdepth 1 ! -name 'pr-*' ! -name '.' ! -name '..' -exec rm -rf {} \;
           git checkout origin/main -- .
