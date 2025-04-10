@@ -51,7 +51,7 @@
     <link rel="stylesheet" href="styles/styles.css">
 
     <!-- Custom JavaScript -->
-    <script src="scripts/scripts.js" defer></script>
+    <script src="scripts/scripts.js" type="module"></script>
 </head>
 
 <body>
@@ -69,17 +69,24 @@
         </nav>
     </div>
 
-    <div class="container d-flex justify-content-center align-items-center vh-100">
-        <div class="text-center">
-            <h2 class="display-4 text-primary">Coming Soon</h2>
-            <h1 class="display-5 text-secondary">The Simplest Way to Get BRL Exchange Rates</h1>
-            <p class="lead">
-                This system will provide real-time exchange rates for the Brazilian Real (BRL) against foreign
-                currencies.
-                Stay tuned for updates!
-            </p>
-            <img src="./images/logo.svg" alt="Coming Soon" class="img-fluid mb-4" width="100" height="100">
-        </div>
+    <div class="container d-flex justify-content-center align-items-center vh-100 flex-column">
+        <h1 class="text-center display-4">BRL to Anything...</h1>
+        <p class="lead text-center text-muted">available :)</p>
+        <form id="exchange-form" class="mt-4">
+            <div class="mb-3">
+                <label for="currency" class="form-label">Select Currency</label>
+                <select id="currency" class="form-select" required>
+                    <option value="" disabled selected></option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="date" class="form-label">Select Date</label>
+                <input type="date" id="date" class="form-control" min="1984-11-28" max="2025-04-10" value="2025-04-10"
+                    required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Get Exchange Rate</button>
+        </form>
+        <div id="result" class="mt-4"></div>
     </div>
 
     <div class="bg-dark">
