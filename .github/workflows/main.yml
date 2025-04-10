@@ -75,7 +75,7 @@ jobs:
           fi
 
           # Sincronizar conteúdo fora de pr-* com a branch main
-          find . -maxdepth 1 ! -name 'pr-*' ! -name '.' ! -name '..' -exec rm -rf {} \;
+          find . -maxdepth 1 ! -name 'pr-*' ! -name '.' ! -name '..' ! -name '.git' -exec rm -rf {} \;
           git checkout origin/main -- .
           rm -rf .github
           git add .
