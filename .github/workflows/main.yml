@@ -60,8 +60,8 @@ jobs:
           mkdir -p pr-$PR_NUMBER
           rm -rf pr-$PR_NUMBER/*
           git checkout ${{ github.event.pull_request.head.sha }} -- .
-          rsync -av --exclude='.github' . pr-$PR_NUMBER/
-          rm -rf pr-$PR_NUMBER/.git
+          rsync -av --exclude='.github' --exclude='.git' . pr-$PR_NUMBER/ # Excluir .git e .github
+          rm -rf pr-$PR_NUMBER/.git # Garantir que .git não seja incluído
           git add pr-$PR_NUMBER
           git commit -m "Update PR #$PR_NUMBER content" || echo "No changes to commit"
           git push origin gh-pages
