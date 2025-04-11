@@ -76,13 +76,12 @@
             <div class="mb-3">
                 <label for="currency" class="form-label">Select Currency</label>
                 <select id="currency" class="form-select" required>
-                    <option value="" disabled selected></option>
+                    <option value="" disabled selected>--</option>
                 </select>
             </div>
             <div class="mb-3">
                 <label for="date" class="form-label">Select Date</label>
-                <input type="date" id="date" class="form-control" min="1984-11-28" max="2025-04-10" value="2025-04-10"
-                    required>
+                <input type="date" id="date" class="form-control" min="1984-11-28" required>
             </div>
             <button type="submit" class="btn btn-primary w-100">Get Exchange Rate</button>
         </form>
@@ -93,6 +92,7 @@
         <footer class="bg-dark container text-center text-white">
             <div class="pt-3">
                 <section>
+                    <h2 class="visually-hidden">Social Media Links</h2>
                     <a class="btn btn-dark btn-floating m-1" href="#" role="button"
                         aria-label="Visit our Facebook page">
                         <i class="bi bi-facebook"></i>
