@@ -1,6 +1,8 @@
 import CurrencyService from './CurrencyService.mjs';
 
 document.addEventListener('DOMContentLoaded', async () => {
+    setMaxDate();
+
     try {
         // Check if currencies are already in localStorage
         let currencies = JSON.parse(localStorage.getItem('currencies'));
@@ -73,3 +75,13 @@ themeToggle.addEventListener('click', () => {
         themeToggle.innerHTML = '<i class="bi bi-moon-stars-fill"></i>';
     }
 });
+
+function setMaxDate() {
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        dateInput.setAttribute('max', today);
+    } else {
+        console.warn('Element with id "date" not found in the DOM.');
+    }
+}
