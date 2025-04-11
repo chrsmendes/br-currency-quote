@@ -1,4 +1,5 @@
 import CurrencyService from './CurrencyService.mjs';
+import { renderExchangeRateChart } from './ChartRenderer.mjs';
 
 document.addEventListener('DOMContentLoaded', async () => {
     setMaxDate();
@@ -30,7 +31,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             try {
                 const data = await CurrencyService.getExchangeRate(selectedCurrency, selectedDate);
-                const lastRate = data.cotacoes[data.cotacoes.length - 1];
+                const lastRate = data.cotacoes && data.cotacoes.length > 0
+                    ? data.cotacoes[data.cotacoes.length - 1]
+                    : null;
+
+                if (!lastRate) {
+                    throw new Error('No exchange rate data available for the selected date.');
+                }
 
                 const resultDiv = document.getElementById('result');
                 resultDiv.innerHTML = `
@@ -42,6 +49,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                 `;
+
+                // remove any previous chart if exists
+                const previousChart = document.getElementById('exchangeRateChart');
+                if (previousChart) {
+                    previousChart.remove();
+                }
+
+                const chart = renderExchangeRateChart(data);
+                const resultDivParent = resultDiv.parentNode;
+                resultDivParent.insertBefore(chart, resultDiv.nextSibling);
+
             } catch (error) {
                 const resultDiv = document.getElementById('result');
                 resultDiv.innerHTML = `
