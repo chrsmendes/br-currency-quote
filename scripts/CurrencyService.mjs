@@ -51,6 +51,17 @@ class CurrencyService {
             }
             const data = await response.json();
 
+            // Ensure cotacao_compra and cotacao_venda are floats
+            if (data.cotacoes) {
+                data.cotacoes = data.cotacoes.map(cotacao => {
+                    return {
+                        ...cotacao,
+                        cotacao_compra: parseFloat(cotacao.cotacao_compra),
+                        cotacao_venda: parseFloat(cotacao.cotacao_venda)
+                    };
+                });
+            }
+
             // Save to local storage if not today's date
             HistoryTracker.saveExchangeRate(currency, date, data);
 

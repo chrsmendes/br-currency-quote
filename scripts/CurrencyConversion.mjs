@@ -38,13 +38,48 @@ class CurrencyConversion {
 
             // Add a note to indicate the rates are inverted
             convertedData.inverted = true;
-            convertedData.rateDescription = `1 BRL to ${currency}`;
 
             return convertedData;
         } catch (error) {
             console.error('Error converting exchange rates:', error);
             throw error;
         }
+    }
+
+    /**
+     * Converts exchange rate data to show how much a custom amount of BRL is worth in the foreign currency
+     * or how much a custom amount of foreign currency is worth in BRL.
+     * @param {Object} data - The exchange rate data (from getBRLExchangeRate or getExchangeRate)
+     * @param {number} amount - The custom amount to calculate the exchange rate for
+     * @returns {Object} - Modified exchange rate data with calculated values for the custom amount
+     */
+    static calculateCustomAmount(data, amount) {
+        if (!data || !data.cotacoes || data.cotacoes.length === 0) {
+            throw new Error('Invalid exchange rate data');
+        }
+
+        // Create a deep copy to avoid modifying the original data
+        const calculatedData = JSON.parse(JSON.stringify(data));
+
+        // Round the calculated rates to two decimal places for display
+        calculatedData.cotacoes = data.cotacoes.map(cotacao => {
+            const calculatedCotacao = { ...cotacao };
+
+            if (cotacao.cotacao_compra && cotacao.cotacao_compra !== 0) {
+                calculatedCotacao.cotacao_compra = +(cotacao.cotacao_compra * amount).toFixed(2);
+            }
+
+            if (cotacao.cotacao_venda && cotacao.cotacao_venda !== 0) {
+                calculatedCotacao.cotacao_venda = +(cotacao.cotacao_venda * amount).toFixed(2);
+            }
+
+            return calculatedCotacao;
+        });
+
+        // Add a note to indicate the rates are calculated for a custom amount
+        calculatedData.customAmount = amount;
+
+        return calculatedData;
     }
 }
 

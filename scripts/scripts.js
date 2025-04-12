@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const selectedCurrency = currencySelect.value;
             const conversionCurrency = conversionCurrencySelect.value;
+            const amount = parseFloat(document.getElementById('amount').value);
 
             // Validate that one of the currencies is BRL
             if (selectedCurrency !== 'BRL' && conversionCurrency !== 'BRL') {
@@ -74,11 +75,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else {
                     // Use CurrencyService for foreign currency to BRL
                     data = await CurrencyService.getExchangeRate(selectedCurrency, selectedDate);
-
                 }
 
-                const lastRate = data.cotacoes && data.cotacoes.length > 0
-                    ? data.cotacoes[data.cotacoes.length - 1]
+                // Calculate custom amount
+                const calculatedData = CurrencyConversion.calculateCustomAmount(data, amount);
+
+                const lastRate = calculatedData.cotacoes && calculatedData.cotacoes.length > 0
+                    ? calculatedData.cotacoes[calculatedData.cotacoes.length - 1]
                     : null;
 
                 if (!lastRate) {
@@ -102,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     previousChart.remove();
                 }
 
-                const chart = renderExchangeRateChart(data);
+                const chart = renderExchangeRateChart(calculatedData);
                 const resultDivParent = resultDiv.parentNode;
                 resultDivParent.insertBefore(chart, resultDiv.nextSibling);
 
