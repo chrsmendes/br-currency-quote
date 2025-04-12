@@ -1,5 +1,6 @@
 import CurrencyService from './CurrencyService.mjs';
 import { renderExchangeRateChart } from './ChartRenderer.mjs';
+import CurrencyConversion from './CurrencyConversion.mjs';
 
 document.addEventListener('DOMContentLoaded', async () => {
     setMaxDate();
@@ -16,9 +17,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         const currencySelect = document.getElementById('currency');
         currencies.forEach(currency => {
             const option = document.createElement('option');
-            option.value = currency.simbolo; // Assuming 'simbolo' is the currency code
+            option.value = currency.simbolo;
             option.textContent = `${currency.nome} (${currency.simbolo})`;
             currencySelect.appendChild(option);
+        });
+
+        // Populate currency options for conversion
+        const conversionCurrencySelect = document.getElementById('conversion-currency');
+
+        currencySelect.addEventListener('change', () => {
+            const selectedCurrency = currencySelect.value;
+
+            // Clear previous options
+            conversionCurrencySelect.innerHTML = '';
+
+            if (selectedCurrency === 'BRL') {
+                // Populate all currencies except BRL
+                currencies.forEach(currency => {
+                    if (currency.simbolo !== 'BRL') {
+                        const option = document.createElement('option');
+                        option.value = currency.simbolo;
+                        option.textContent = `${currency.nome} (${currency.simbolo})`;
+                        conversionCurrencySelect.appendChild(option);
+                    }
+                });
+            } else {
+                // Ensure only BRL is available as the conversion currency
+                const option = document.createElement('option');
+                option.value = 'BRL';
+                option.textContent = 'Brazilian Real (BRL)';
+                conversionCurrencySelect.appendChild(option);
+            }
         });
 
         // Handle form submission
@@ -27,10 +56,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             event.preventDefault();
 
             const selectedCurrency = currencySelect.value;
+            const conversionCurrency = conversionCurrencySelect.value;
+
+            // Validate that one of the currencies is BRL
+            if (selectedCurrency !== 'BRL' && conversionCurrency !== 'BRL') {
+                alert('Conversions are only allowed between BRL and other currencies.');
+                return;
+            }
+
             const selectedDate = document.getElementById('date').value;
 
             try {
-                const data = await CurrencyService.getExchangeRate(selectedCurrency, selectedDate);
+                let data;
+                if (selectedCurrency === 'BRL') {
+                    // Use CurrencyConversion for BRL to foreign currency
+                    data = await CurrencyConversion.getBRLExchangeRate(conversionCurrency, selectedDate);
+                } else {
+                    // Use CurrencyService for foreign currency to BRL
+                    data = await CurrencyService.getExchangeRate(selectedCurrency, selectedDate);
+
+                }
+
                 const lastRate = data.cotacoes && data.cotacoes.length > 0
                     ? data.cotacoes[data.cotacoes.length - 1]
                     : null;
@@ -43,14 +89,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 resultDiv.innerHTML = `
                     <div class="card mb-3">
                         <div class="card-body">
-                            <h5 class="card-title">Exchange Rate for ${data.moeda} on ${data.data}</h5>
-                            <p class="card-text">Buy Rate: ${data.moeda} 1.00 → BRL ${lastRate.cotacao_compra}</p>
-                            <p class="card-text">Sell Rate: ${data.moeda} 1.00 → BRL ${lastRate.cotacao_venda}</p>
+                            <h5 class="card-title">Exchange Rate for ${selectedCurrency} on ${data.data}</h5>
+                            <p class="card-text">Buy Rate: ${selectedCurrency} 1.00 → ${conversionCurrency} ${lastRate.cotacao_compra}</p>
+                            <p class="card-text">Sell Rate: ${selectedCurrency} 1.00 → ${conversionCurrency} ${lastRate.cotacao_venda}</p>
                         </div>
                     </div>
                 `;
 
-                // remove any previous chart if exists
+                // Remove any previous chart if exists
                 const previousChart = document.getElementById('exchangeRateChart');
                 if (previousChart) {
                     previousChart.remove();
