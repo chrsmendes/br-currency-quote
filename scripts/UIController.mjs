@@ -1,6 +1,7 @@
 import CurrencyService from './CurrencyService.mjs';
 import CurrencyConversion from './CurrencyConversion.mjs';
 import { renderExchangeRateChart } from './ChartRenderer.mjs';
+import LinkSharer from './LinkSharer.mjs';
 
 /**
  * UIController class for managing the user interface and interactions
@@ -240,5 +241,37 @@ export default class UIController {
                 this.displayError(error);
             }
         });
+    }
+
+    /**
+     * Adds functionality to generate and copy a shareable link for the form.
+     * This method sets up the event listener for the 'Generate Shareable Link' button
+     * and handles copying the link to the clipboard.
+     * 
+     * @param {HTMLFormElement} form - The form element for currency conversion.
+     * @static
+     * @returns {void}
+     */
+    static setupShareableLink(form) {
+        const shareLinkButton = document.getElementById('share-link-button');
+        if (shareLinkButton) {
+            shareLinkButton.addEventListener('click', () => {
+                const shareableLink = LinkSharer.generateShareableLink(form);
+
+                // Copy the shareable link to clipboard and notify the user
+                navigator.clipboard.writeText(shareableLink).then(() => {
+                    alert(`Shareable Link copied to clipboard: ${shareableLink}`);
+                }).catch(err => {
+                    console.error('Failed to copy link: ', err);
+                    alert(`Failed to copy the link. Here it is: ${shareableLink}`);
+                });
+            });
+        }
+
+        // Load query parameters into the form
+        LinkSharer.loadQueryParamsToForm(form);
+
+        // Automatically submit the form if query parameters exist
+        LinkSharer.autoSubmitFormIfParamsExist(form);
     }
 }
