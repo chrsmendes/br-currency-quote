@@ -122,17 +122,18 @@ export default class UIController {
      * @param {string} selectedCurrency - The selected currency code.
      * @param {string} conversionCurrency - The conversion currency code.
      * @param {Object} lastRate - The last exchange rate object containing buy and sell rates.
+     * @param {number} amount - The amount to convert.
      * @static
      * @returns {void}
      */
-    static displayResult(data, selectedCurrency, conversionCurrency, lastRate) {
+    static displayResult(data, selectedCurrency, conversionCurrency, lastRate, amount) {
         const resultDiv = document.getElementById('result');
         resultDiv.innerHTML = `
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Exchange Rate for ${selectedCurrency} on ${data.data}</h5>
-                    <p class="card-text">Buy Rate: ${selectedCurrency} 1.00 → ${conversionCurrency} ${lastRate.cotacao_compra}</p>
-                    <p class="card-text">Sell Rate: ${selectedCurrency} 1.00 → ${conversionCurrency} ${lastRate.cotacao_venda}</p>
+                    <p class="card-text">Buy Rate: ${selectedCurrency} ${amount} → ${conversionCurrency} ${lastRate.cotacao_compra}</p>
+                    <p class="card-text">Sell Rate: ${selectedCurrency} ${amount} → ${conversionCurrency} ${lastRate.cotacao_venda}</p>
                 </div>
             </div>
         `;
@@ -226,7 +227,7 @@ export default class UIController {
                     throw new Error('No exchange rate data available for the selected date.');
                 }
 
-                this.displayResult(data, selectedCurrency, conversionCurrency, lastRate);
+                this.displayResult(data, selectedCurrency, conversionCurrency, lastRate, amount);
 
                 // Remove any previous chart if exists
                 const previousChart = document.getElementById('exchangeRateChart');
