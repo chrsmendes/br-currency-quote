@@ -3,7 +3,10 @@ export function renderExchangeRateChart(data, chartId = 'exchangeRateChart') {
         throw new Error('Invalid or empty cotacoes array');
     }
 
-    const labels = data.cotacoes.map(cotacao => cotacao.data_hora_cotacao || 'Unknown');
+    const labels = data.cotacoes.map(cotacao => {
+        const parts = typeof cotacao.data_hora_cotacao === 'string' ? cotacao.data_hora_cotacao.split(' ') : [];
+        return parts.length > 1 ? parts[1].substring(0, 5) : 'Unknown';
+    });
     const buyRates = data.cotacoes.map(cotacao => cotacao.cotacao_compra || 0);
     const sellRates = data.cotacoes.map(cotacao => cotacao.cotacao_venda || 0);
 
