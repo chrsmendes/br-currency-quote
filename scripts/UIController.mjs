@@ -105,11 +105,13 @@ export default class UIController {
         };
 
         // Remove any existing 'change' event listener before adding a new one
-        if (currencySelect._changeHandler) {
-            currencySelect.removeEventListener('change', currencySelect._changeHandler);
+        const handlerMap = UIController._handlerMap || (UIController._handlerMap = new WeakMap());
+
+        if (handlerMap.has(currencySelect)) {
+            currencySelect.removeEventListener('change', handlerMap.get(currencySelect));
         }
         currencySelect.addEventListener('change', changeHandler);
-        currencySelect._changeHandler = changeHandler;
+        handlerMap.set(currencySelect, changeHandler);
     }
 
     /**
@@ -197,7 +199,7 @@ export default class UIController {
 
             // Validate that one of the currencies is BRL
             if (selectedCurrency !== 'BRL' && conversionCurrency !== 'BRL') {
-                alert('Conversions are only allowed between BRL and other currencies.');
+                this.showNotification('Conversions are only allowed between BRL and other currencies.', 'warning');
                 return;
             }
 
@@ -260,10 +262,10 @@ export default class UIController {
 
                 // Copy the shareable link to clipboard and notify the user
                 navigator.clipboard.writeText(shareableLink).then(() => {
-                    alert(`Shareable Link copied to clipboard: ${shareableLink}`);
+                    UIController.showNotification(`Shareable Link copied to clipboard 🔗`, 'success');
                 }).catch(err => {
                     console.error('Failed to copy link: ', err);
-                    alert(`Failed to copy the link. Here it is: ${shareableLink}`);
+                    UIController.showNotification(`Failed to copy the link. Here it is: ${shareableLink}`, 'danger');
                 });
             });
         }
@@ -273,5 +275,38 @@ export default class UIController {
 
         // Automatically submit the form if query parameters exist
         LinkSharer.autoSubmitFormIfParamsExist(form);
+    }
+
+    /**
+     * Displays a Bootstrap notification.
+     * This method creates a dismissible alert element to show messages.
+     * 
+     * @param {string} message - The message to display.
+     * @param {string} type - The type of alert (e.g., 'success', 'danger', 'info', 'warning').
+     * @static
+     * @returns {void}
+     */
+    static showNotification(message, type = 'info') {
+        const notificationContainer = document.getElementById('notification-container');
+        if (!notificationContainer) {
+            console.error('Notification container not found in the DOM.');
+            return;
+        }
+
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+
+        notificationContainer.appendChild(alertDiv);
+
+        // Automatically remove the alert after 5 seconds
+        setTimeout(() => {
+            alertDiv.classList.remove('show');
+            alertDiv.addEventListener('transitionend', () => alertDiv.remove());
+        }, 5000);
     }
 }
