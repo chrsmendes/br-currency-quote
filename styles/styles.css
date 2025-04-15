@@ -1,8 +1,16 @@
 /* Definir variáveis CSS para as cores */
 :root {
-  --primary-color: #007b; /* Azul */
+  --primary-color: #007bff; /* Azul */
   --secondary-color: #6c757d; /* Cinza */
   --accent-color: #28a745; /* Verde */
+}
+
+body {
+  background-color: var(--secondary-color); /* Cinza claro */
+}
+
+.container {
+  max-width: 700px;
 }
 
 /* Sobrescrever botões do Bootstrap */
@@ -60,9 +68,18 @@ a:hover {
   background-color: var(--primary-color);
 }
 
+#navbar-brand {
+  display: flex;
+  gap: 10px;
+}
+
 /* Estilo para ícones minimalistas representando BRL */
 .icon-brl::before {
   content: "\f155"; /* Código de exemplo do FontAwesome para ícone de moeda */
   font-family: "FontAwesome"; /* Certifique-se de incluir o FontAwesome no projeto */
   color: var(--primary-color);
+}
+
+#main-content {
+  margin-bottom: 150px !important;
 }
