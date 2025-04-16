@@ -6,23 +6,56 @@ import HistoryTracker from './HistoryTracker.mjs';
  */
 class CurrencyService {
     /**
-     * Fetches the list of available currencies from the API
+     * Fetches the flags data from an external API endpoint.
+     * 
+     * @returns {Promise<Array>}
+     * @throws {Error}
+     */
+    static async fetchFlags() {
+        const flagsUrl = 'https://gist.githubusercontent.com/ibrahimhajjaj/a0e39e7330aebf0feb49912f1bf9062f/raw/d160e7d3b0e11ea3912e97a1b3b25b359746c86a/currencies-with-flags.json';
+        try {
+            const flagsResponse = await fetch(flagsUrl);
+            if (!flagsResponse.ok) {
+                throw new Error(`Error fetching flags: ${flagsResponse.statusText}`);
+            }
+            return await flagsResponse.json();
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
+    /**
+     * Fetches the list of available currencies from the BrasilAPI.
+     * 
      * @returns {Promise<Array>} - List of currencies
+     * @throws {Error} - If either API fetch operation fails
      */
     static async getCurrencies() {
         const url = 'https://brasilapi.com.br/api/cambio/v1/moedas';
         try {
-            const response = await fetch(url);
+            // Fetch both currencies and flags in parallel for efficiency
+            const [response, flagsData] = await Promise.all([fetch(url), this.fetchFlags()]);
             if (!response.ok) {
                 throw new Error(`Error fetching currencies: ${response.statusText}`);
             }
 
-            // Add BRL to the list of currencies as it is not included in the API response
             const data = await response.json();
+
+            // Add BRL to the list of currencies as it is not included in the API response
             const brl = { nome: 'Real Brasileiro', simbolo: 'BRL' };
             data.push(brl);
 
-            return data;
+            // Map flags to currencies
+            const currenciesWithFlags = data.map(currency => {
+                const flagInfo = flagsData.find(flag => flag.code === currency.simbolo);
+                return {
+                    ...currency,
+                    flag: flagInfo ? flagInfo.flag : null
+                };
+            });
+
+            return currenciesWithFlags;
         } catch (error) {
             console.error(error);
             throw error;

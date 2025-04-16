@@ -62,67 +62,136 @@ export default class UIController {
     }
 
     /**
-     * Populates the currency options in the select elements.
-     * This method also sets up an event listener to filter the conversion currency options based on the selected currency.
+     * Creates a currency list item element with proper event listeners
      * 
-     * @param {Array} currencies - List of currency objects to populate the select elements.
-     * @param {HTMLSelectElement} currencySelect - The select element for the main currency.
-     * @param {HTMLSelectElement} conversionCurrencySelect - The select element for the conversion currency.
+     * @param {Object} currency - Currency object containing symbol, name, and flag information
+     * @param {Function} onItemSelected - Callback function to execute when an item is selected
+     * @returns {HTMLLIElement} - The list item element representing a currency option
+     * @static
+     * @private
+     */
+    static _createCurrencyListItem(currency, onItemSelected) {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `<a class="dropdown-item" href="#" data-value="${currency.simbolo}">
+            <img src="${currency.flag}" alt="${currency.nome} flag" width="25" height="25"> ${currency.simbolo}
+        </a>`;
+
+        listItem.addEventListener('click', function (e) {
+            const dropdownContainer = this.closest('.dropdown');
+            const selectedDropdown = dropdownContainer.querySelector('.selected-dropdown');
+            selectedDropdown.innerHTML = this.innerHTML;
+            selectedDropdown.setAttribute('data-value', currency.simbolo);
+
+            if (onItemSelected) {
+                onItemSelected(selectedDropdown);
+            }
+        });
+
+        return listItem;
+    }
+
+    /**
+     * Updates the conversion currency options based on the selected primary currency
+     * 
+     * @param {HTMLElement} selectedDropdown - The dropdown element that was changed
+     * @param {Array} currencies - List of all available currencies
+     * @param {HTMLUListElement} conversionCurrencyUl - The list element for conversion currencies
+     * @static
+     * @private
+     */
+    static _updateConversionCurrencyOptions(selectedDropdown, currencies, conversionCurrencyUl) {
+        const selectedCurrency = selectedDropdown.getAttribute('data-value');
+
+        // Clear previous options
+        conversionCurrencyUl.innerHTML = '';
+
+        if (selectedCurrency === 'BRL') {
+            // When BRL is selected as the primary currency,
+            // populate all other available currencies as conversion options
+            this._populateForeignCurrencyOptions(currencies, conversionCurrencyUl);
+
+            // Reset the selected conversion currency
+            const conversionDropdown = conversionCurrencyUl.closest('.dropdown').querySelector('.selected-dropdown');
+            conversionDropdown.innerHTML = "";
+            conversionDropdown.setAttribute('data-value', '');
+        } else {
+            // When a foreign currency is selected, only allow BRL as conversion currency
+            this._setOnlyBRLAsConversionOption(currencies, conversionCurrencyUl);
+        }
+    }
+
+    /**
+     * Populates the conversion dropdown with all foreign currencies (excluding BRL)
+     * 
+     * @param {Array} currencies - List of all available currencies
+     * @param {HTMLUListElement} conversionCurrencyUl - The list element for conversion currencies
+     * @static
+     * @private
+     */
+    static _populateForeignCurrencyOptions(currencies, conversionCurrencyUl) {
+        currencies.forEach(currency => {
+            if (currency.simbolo !== 'BRL') {
+                const listItem = this._createCurrencyListItem(currency, null);
+                conversionCurrencyUl.appendChild(listItem);
+            }
+        });
+    }
+
+    /**
+     * Sets BRL as the only available conversion currency option
+     * 
+     * @param {Array} currencies - List of all available currencies
+     * @param {HTMLUListElement} conversionCurrencyUl - The list element for conversion currencies
+     * @static
+     * @private
+     */
+    static _setOnlyBRLAsConversionOption(currencies, conversionCurrencyUl) {
+        const brlCurrency = currencies.find(currency => currency.simbolo === 'BRL');
+        if (brlCurrency) {
+            const listItem = this._createCurrencyListItem(brlCurrency, null);
+            conversionCurrencyUl.appendChild(listItem);
+
+            // Auto-select BRL as the conversion currency
+            listItem.click();
+        }
+    }
+
+    /**
+     * Populates the currency options in the select elements.
+     * This method also sets up an event listener to filter the conversion currency options
+     * based on the selected currency.
+     * 
+     * @param {Array} currencies - List of currency objects to populate the select elements
+     * @param {HTMLUListElement} currencyUl - The list element for the main currency
+     * @param {HTMLUListElement} conversionCurrencyUl - The list element for the conversion currency
      * @static
      * @returns {void}
      */
-    static populateCurrencyOptions(currencies, currencySelect, conversionCurrencySelect) {
+    static populateCurrencyOptions(currencies, currencyUl, conversionCurrencyUl) {
+
+        // Populate the primary currency dropdown
         currencies.forEach(currency => {
-            const option = document.createElement('option');
-            option.value = currency.simbolo;
-            option.textContent = `${currency.nome} (${currency.simbolo})`;
-            currencySelect.appendChild(option);
+            const listItem = this._createCurrencyListItem(
+                currency,
+                (selectedDropdown) => this._updateConversionCurrencyOptions(
+                    selectedDropdown,
+                    currencies,
+                    conversionCurrencyUl
+                )
+            );
+            currencyUl.appendChild(listItem);
         });
-
-        const changeHandler = () => {
-            const selectedCurrency = currencySelect.value;
-
-            // Clear previous options
-            conversionCurrencySelect.innerHTML = '';
-
-            if (selectedCurrency === 'BRL') {
-                // Populate all currencies except BRL
-                currencies.forEach(currency => {
-                    if (currency.simbolo !== 'BRL') {
-                        const option = document.createElement('option');
-                        option.value = currency.simbolo;
-                        option.textContent = `${currency.nome} (${currency.simbolo})`;
-                        conversionCurrencySelect.appendChild(option);
-                    }
-                });
-            } else {
-                // Ensure only BRL is available as the conversion currency
-                const option = document.createElement('option');
-                option.value = 'BRL';
-                option.textContent = 'Brazilian Real (BRL)';
-                conversionCurrencySelect.appendChild(option);
-            }
-        };
-
-        // Remove any existing 'change' event listener before adding a new one
-        const handlerMap = UIController._handlerMap || (UIController._handlerMap = new WeakMap());
-
-        if (handlerMap.has(currencySelect)) {
-            currencySelect.removeEventListener('change', handlerMap.get(currencySelect));
-        }
-        currencySelect.addEventListener('change', changeHandler);
-        handlerMap.set(currencySelect, changeHandler);
     }
 
     /**
      * Displays the result of the exchange rate calculation in the UI.
      * This method creates a card element to show the exchange rate details.
      * 
-     * @param {Object} data - The exchange rate data to display.
-     * @param {string} selectedCurrency - The selected currency code.
-     * @param {string} conversionCurrency - The conversion currency code.
-     * @param {Object} lastRate - The last exchange rate object containing buy and sell rates.
-     * @param {number} amount - The amount to convert.
+     * @param {Object} data - The exchange rate data to display
+     * @param {string} selectedCurrency - The selected currency code
+     * @param {string} conversionCurrency - The conversion currency code
+     * @param {Object} lastRate - The last exchange rate object containing buy and sell rates
+     * @param {number} amount - The amount to convert
      * @static
      * @returns {void}
      */
@@ -143,7 +212,7 @@ export default class UIController {
      * Displays an error message in the UI.
      * This method creates an alert element to show the error details.
      * 
-     * @param {Error} error - The error object containing the error message.
+     * @param {Error} error - The error object containing the error message
      * @static
      * @returns {void}
      */
@@ -161,7 +230,7 @@ export default class UIController {
      * Toggles the theme between light and dark modes.
      * This method updates the theme attribute on the document element and changes the button icon.
      * 
-     * @param {HTMLElement} themeToggle - The button element used to toggle the theme.
+     * @param {HTMLElement} themeToggle - The button element used to toggle the theme
      * @static
      * @returns {void}
      */
@@ -181,43 +250,79 @@ export default class UIController {
     }
 
     /**
+     * Validates that one of the currencies must be BRL
+     * 
+     * @param {string} sourceCurrency - The source currency code
+     * @param {string} targetCurrency - The target currency code
+     * @returns {boolean} - Whether the selection is valid (one of them must be BRL)
+     * @static
+     * @private
+     */
+    static _validateCurrencySelection(sourceCurrency, targetCurrency) {
+        if (sourceCurrency !== 'BRL' && targetCurrency !== 'BRL') {
+            this.showNotification('Conversions are only allowed between BRL and other currencies.', 'warning');
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Fetches and processes exchange rate data
+     * 
+     * @param {string} selectedCurrency - The selected source currency code
+     * @param {string} conversionCurrency - The selected target currency code
+     * @param {string} selectedDate - The date for the exchange rate
+     * @param {number} amount - The amount to convert
+     * @returns {Promise<Object>} - The calculated exchange rate data
+     * @static
+     * @private
+     */
+    static async _fetchExchangeRateData(selectedCurrency, conversionCurrency, selectedDate, amount) {
+        let data;
+
+        if (selectedCurrency === 'BRL') {
+            // Use CurrencyConversion for BRL to foreign currency
+            data = await CurrencyConversion.getBRLExchangeRate(conversionCurrency, selectedDate);
+        } else {
+            // Use CurrencyService for foreign currency to BRL
+            data = await CurrencyService.getExchangeRate(selectedCurrency, selectedDate);
+        }
+
+        // Calculate custom amount
+        return CurrencyConversion.calculateCustomAmount(data, amount);
+    }
+
+    /**
      * Handles the form submission for currency conversion.
      * This method validates the input, fetches the exchange rate data, and displays the result.
      * 
-     * @param {HTMLFormElement} form - The form element for currency conversion.
-     * @param {HTMLSelectElement} currencySelect - The select element for the main currency.
-     * @param {HTMLSelectElement} conversionCurrencySelect - The select element for the conversion currency.
+     * @param {HTMLFormElement} form - The form element for currency conversion
+     * @param {HTMLElement} currencySpan - The element that holds the selected source currency
+     * @param {HTMLElement} conversionCurrencySpan - The element that holds the selected target currency
      * @static
      * @returns {void}
      */
-    static async handleFormSubmission(form, currencySelect, conversionCurrencySelect) {
+    static async handleFormSubmission(form, currencySpan, conversionCurrencySpan) {
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
 
-            const selectedCurrency = currencySelect.value;
-            const conversionCurrency = conversionCurrencySelect.value;
+            const selectedCurrency = currencySpan.getAttribute('data-value');
+            const conversionCurrency = conversionCurrencySpan.getAttribute('data-value');
             const amount = parseFloat(document.getElementById('amount').value);
+            const selectedDate = document.getElementById('date').value;
 
             // Validate that one of the currencies is BRL
-            if (selectedCurrency !== 'BRL' && conversionCurrency !== 'BRL') {
-                this.showNotification('Conversions are only allowed between BRL and other currencies.', 'warning');
+            if (!this._validateCurrencySelection(selectedCurrency, conversionCurrency)) {
                 return;
             }
 
-            const selectedDate = document.getElementById('date').value;
-
             try {
-                let data;
-                if (selectedCurrency === 'BRL') {
-                    // Use CurrencyConversion for BRL to foreign currency
-                    data = await CurrencyConversion.getBRLExchangeRate(conversionCurrency, selectedDate);
-                } else {
-                    // Use CurrencyService for foreign currency to BRL
-                    data = await CurrencyService.getExchangeRate(selectedCurrency, selectedDate);
-                }
-
-                // Calculate custom amount
-                const calculatedData = CurrencyConversion.calculateCustomAmount(data, amount);
+                const calculatedData = await this._fetchExchangeRateData(
+                    selectedCurrency,
+                    conversionCurrency,
+                    selectedDate,
+                    amount
+                );
 
                 const lastRate = calculatedData.cotacoes && calculatedData.cotacoes.length > 0
                     ? calculatedData.cotacoes[calculatedData.cotacoes.length - 1]
@@ -227,18 +332,10 @@ export default class UIController {
                     throw new Error('No exchange rate data available for the selected date.');
                 }
 
-                this.displayResult(data, selectedCurrency, conversionCurrency, lastRate, amount);
+                this.displayResult(calculatedData, selectedCurrency, conversionCurrency, lastRate, amount);
 
-                // Remove any previous chart if exists
-                const previousChart = document.getElementById('exchangeRateChart');
-                if (previousChart) {
-                    previousChart.remove();
-                }
-
-                const chart = renderExchangeRateChart(calculatedData);
-                const resultDiv = document.getElementById('result');
-                const resultDivParent = resultDiv.parentNode;
-                resultDivParent.insertBefore(chart, resultDiv.nextSibling);
+                // Render the exchange rate chart
+                this._renderExchangeRateChart(calculatedData);
 
             } catch (error) {
                 this.displayError(error);
@@ -247,11 +344,31 @@ export default class UIController {
     }
 
     /**
+     * Renders the exchange rate chart and adds it to the DOM
+     * 
+     * @param {Object} calculatedData - The exchange rate data to visualize
+     * @static
+     * @private
+     */
+    static _renderExchangeRateChart(calculatedData) {
+        // Remove any previous chart if exists
+        const previousChart = document.getElementById('exchangeRateChart');
+        if (previousChart) {
+            previousChart.remove();
+        }
+
+        const chart = renderExchangeRateChart(calculatedData);
+        const resultDiv = document.getElementById('result');
+        const resultDivParent = resultDiv.parentNode;
+        resultDivParent.insertBefore(chart, resultDiv.nextSibling);
+    }
+
+    /**
      * Adds functionality to generate and copy a shareable link for the form.
      * This method sets up the event listener for the 'Generate Shareable Link' button
      * and handles copying the link to the clipboard.
      * 
-     * @param {HTMLFormElement} form - The form element for currency conversion.
+     * @param {HTMLFormElement} form - The form element for currency conversion
      * @static
      * @returns {void}
      */
@@ -282,8 +399,8 @@ export default class UIController {
      * Displays a Bootstrap notification.
      * This method creates a dismissible alert element to show messages.
      * 
-     * @param {string} message - The message to display.
-     * @param {string} type - The type of alert (e.g., 'success', 'danger', 'info', 'warning').
+     * @param {string} message - The message to display
+     * @param {string} type - The type of alert (e.g., 'success', 'danger', 'info', 'warning')
      * @static
      * @returns {void}
      */
