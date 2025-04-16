@@ -7,20 +7,25 @@
 
     <title>Brazilian Currency Quote System</title>
 
+    <!-- SEO Metadata -->
     <meta name="description"
         content="Get real-time exchange rates for the Brazilian Real (BRL) against foreign currencies. Convert, track, and share currency data easily.">
     <meta name="keywords"
         content="currency exchange, BRL, Brazilian Real, exchange rates, currency converter, financial tools, travel finance">
+
+    <!-- Open Graph / Social Media -->
     <meta property="og:title" content="Brazilian Currency Quote System">
     <meta property="og:description"
         content="Get real-time exchange rates for the Brazilian Real (BRL) against foreign currencies. Convert, track, and share currency data easily.">
-    <meta property="og:image" content="URL_TO_IMAGE">
+    <meta property="og:image" content="./images/android-icon-192x192.png">
     <meta property="og:url" content="CANONICAL_URL">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Brazilian Currency Quote System">
     <meta name="twitter:description"
         content="Get real-time exchange rates for the Brazilian Real (BRL) against foreign currencies. Convert, track, and share currency data easily.">
-    <meta name="twitter:image" content="URL_TO_IMAGE">
+    <meta name="twitter:image" content="./images/android-icon-192x192.png">
+
+    <!-- Favicon and App Icons -->
     <link rel="apple-touch-icon" sizes="57x57" href="./images/apple-icon-57x57.png">
     <link rel="apple-touch-icon" sizes="60x60" href="./images/apple-icon-60x60.png">
     <link rel="apple-touch-icon" sizes="72x72" href="./images/apple-icon-72x72.png">
@@ -61,6 +66,7 @@
     <!-- Notification container for Bootstrap alerts -->
     <div id="notification-container" style="position: fixed; top: 20px; right: 20px; z-index: 1050;"></div>
 
+    <!-- Navigation Bar -->
     <div class="bg-body-tertiary">
         <nav class="navbar container bg-body-tertiary">
             <div class="container-fluid">
@@ -75,9 +81,11 @@
         </nav>
     </div>
 
+    <!-- Main Content -->
     <div class="container mt-5 mb-5" id="main-content">
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
+                <!-- Share Button -->
                 <button type="button" id="share-link-button" class="btn btn-sm position-absolute top-0 end-0 mt-2 me-2"
                     title="Share">
                     <i class="bi bi-share"></i>
@@ -85,8 +93,10 @@
 
                 <h2 class="card-title text-center mb-4">BRL to Anything...</h2>
 
+                <!-- Exchange Rate Form -->
                 <form id="exchange-form" class="needs-validation" novalidate>
                     <div class="row g-3 mb-3">
+                        <!-- Amount Input -->
                         <div class="col-md-6">
                             <div class="form-floating">
                                 <input type="number" id="amount" name="amount" class="form-control"
@@ -98,38 +108,55 @@
                             </div>
                         </div>
 
+                        <!-- Source Currency Dropdown -->
                         <div class="col-md-6">
-                            <div class="form-floating">
-                                <select id="currency" name="currency" class="form-select" required
-                                    aria-label="Currency">
-                                    <option value="" disabled selected>--</option>
-                                </select>
-                                <label for="currency">Convert From (Currency)</label>
-                                <div class="invalid-feedback">
-                                    Please select a source currency.
+                            <div class="dropdown form-floating">
+                                <div class="form-control d-flex justify-content-between" id="currency-container"
+                                    data-bs-toggle="dropdown" tabindex="0" role="combobox" data-required="true"
+                                    aria-expanded="false" aria-controls="currency-list" aria-label="Currency"
+                                    aria-labelledby="currency-label">
+                                    <span class="selected-dropdown" id="currency-span"></span>
+                                    <span class="dropdown-toggle"></span>
                                 </div>
+                                <label id="currency-label" class="form-label">Currency</label>
+                                <div class="invalid-feedback">
+                                    Please select one currency.
+                                </div>
+                                <ul class="dropdown-menu w-100" aria-labelledby="currency-container" id="currency-list"
+                                    role="listbox">
+                                    <!-- Currency options will be dynamically populated by JavaScript -->
+                                </ul>
                             </div>
                         </div>
                     </div>
 
                     <div class="row g-3 mb-4">
+                        <!-- Target Currency Dropdown -->
                         <div class="col-md-6">
-                            <div class="form-floating">
-                                <select id="conversion-currency" name="conversion-currency" class="form-select" required
-                                    aria-label="Conversion Currency">
-                                    <option value="" disabled selected>--</option>
-                                </select>
-                                <label for="conversion-currency">Convert To (Currency)</label>
+                            <div class="dropdown form-floating">
+                                <div class="form-control d-flex justify-content-between"
+                                    id="conversion-currency-container" data-bs-toggle="dropdown" tabindex="0"
+                                    role="combobox" data-required="true" aria-expanded="false"
+                                    aria-controls="conversion-currency-list" aria-label="Conversion Currency"
+                                    aria-labelledby="conversion-currency-label">
+                                    <span class="selected-dropdown" id="conversion-currency-span"></span>
+                                    <span class="dropdown-toggle"></span>
+                                </div>
+                                <label id="conversion-currency-label" class="form-label">Conversion Currency</label>
+                                <ul class="dropdown-menu w-100" aria-labelledby="conversion-currency-container"
+                                    id="conversion-currency-list" role="listbox">
+                                    <!-- Conversion currency options will be dynamically populated by JavaScript -->
+                                </ul>
                                 <div class="invalid-feedback">
-                                    Please select a target currency.
+                                    Please select one conversion currency.
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Date Picker -->
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <input type="date" id="date" name="date" class="form-control" placeholder=" "
-                                    min="1984-11-28" required>
+                                <input type="date" id="date" name="date" class="form-control" min="1984-11-28" required>
                                 <label for="date">Select Date</label>
                                 <div class="invalid-feedback">
                                     Please select a valid date.
@@ -138,17 +165,19 @@
                         </div>
                     </div>
 
+                    <!-- Submit Button -->
                     <button type="submit" class="btn btn-primary w-100 btn-lg">Get Exchange Rate</button>
                 </form>
 
+                <!-- Results Display Area -->
                 <div id="result" class="mt-4 align-self-center"></div>
             </div>
         </div>
     </div>
 
+    <!-- Footer -->
     <div class="bg-dark fixed-bottom" id="footer">
         <footer class="bg-dark container text-center text-white">
-
             <div class="text-center p-4 bg-dark">
                 © 2025 Brazilian Currency Quote System. All rights reserved.
                 <a class="btn btn-dark m-1" href="https://github.com/chrsmendes/br-currency-quote" role="button"
