@@ -20,7 +20,6 @@ class CurrencyService {
             }
             return await flagsResponse.json();
         } catch (error) {
-            console.error(error);
             throw error;
         }
     }
@@ -59,7 +58,6 @@ class CurrencyService {
 
             return currenciesWithFlags;
         } catch (error) {
-            console.error(error);
             throw error;
         }
     }
@@ -116,7 +114,6 @@ class CurrencyService {
 
             return data;
         } catch (error) {
-            console.error(error);
             throw error;
         }
     }

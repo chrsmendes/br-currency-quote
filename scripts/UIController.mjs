@@ -56,8 +56,6 @@ export default class UIController {
         const dateInput = document.getElementById('date');
         if (dateInput) {
             dateInput.setAttribute('max', today);
-        } else {
-            console.warn('Element with id "date" not found in the DOM.');
         }
     }
 
@@ -200,7 +198,7 @@ export default class UIController {
         resultDiv.innerHTML = `
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Exchange Rate for ${selectedCurrency} on ${data.data}</h5>
+                    <h3 class="card-title">Exchange Rate for ${selectedCurrency} on ${data.data}</h3>
                     <p class="card-text">Buy Rate: ${selectedCurrency} ${amount} → ${conversionCurrency} ${lastRate.cotacao_compra}</p>
                     <p class="card-text">Sell Rate: ${selectedCurrency} ${amount} → ${conversionCurrency} ${lastRate.cotacao_venda}</p>
                 </div>
@@ -223,7 +221,6 @@ export default class UIController {
                 <strong>Error:</strong> ${error.message || 'An unexpected error occurred.'}
             </div>
         `;
-        console.error('Failed to fetch exchange rate:', error);
     }
 
     /**
@@ -381,8 +378,7 @@ export default class UIController {
                 // Copy the shareable link to clipboard and notify the user
                 navigator.clipboard.writeText(shareableLink).then(() => {
                     UIController.showNotification(`Shareable Link copied to clipboard 🔗`, 'success');
-                }).catch(err => {
-                    console.error('Failed to copy link: ', err);
+                }).catch(() => {
                     UIController.showNotification(`Failed to copy the link. Here it is: ${shareableLink}`, 'danger');
                 });
             });
@@ -407,7 +403,6 @@ export default class UIController {
     static showNotification(message, type = 'info') {
         const notificationContainer = document.getElementById('notification-container');
         if (!notificationContainer) {
-            console.error('Notification container not found in the DOM.');
             return;
         }
 
