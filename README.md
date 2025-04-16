@@ -25,6 +25,9 @@ The **Brazilian Currency Quote System** is a web application designed to provide
 - **localStorage API**: For caching exchange rate data and user preferences.
 - **GitHub Pages**: For hosting the application.
 - **ESLint**: For code quality and consistent style.
+- **Husky**: For Git hooks to enforce code quality standards.
+- **lint-staged**: For running linters on staged Git files.
+- **Prettier**: For consistent code formatting.
 
 ## Project Structure
 
@@ -33,6 +36,8 @@ br-currency-quote/
 ├── .github/
 │   └── workflows/
 │       └── main.yml       # GitHub Actions workflow for deployment with PR previews
+├── .husky/                # Git hooks for code quality enforcement
+│   └── pre-commit         # Pre-commit hook to run linters before committing
 ├── images/                # Icons and logo assets
 ├── scripts/
 │   ├── ChartRenderer.mjs  # Chart.js integration for data visualization
@@ -81,11 +86,22 @@ This project follows accessibility best practices:
    ```bash
    cd br-currency-quote
    ```
-3. Install dependencies (optional - for development only):
+3. Install dependencies:
    ```bash
    npm install
    ```
 4. Open `index.html` in your browser.
+
+## Development
+
+This project uses several tools to maintain code quality:
+
+- **ESLint**: Checks JavaScript code for quality and adherence to style guidelines
+- **Prettier**: Formats code consistently across the project
+- **Husky**: Manages Git hooks to automate quality checks
+- **lint-staged**: Runs linters only on staged Git files for better performance
+
+A pre-commit hook is set up to run ESLint and Prettier on your files before each commit. This ensures that all code committed to the repository maintains consistent style and passes linting rules. If any issues are found that can't be automatically fixed, the commit will be blocked until you resolve them.
 
 ## Deployment
 
@@ -100,15 +116,17 @@ Contributions are welcome! Please follow these steps:
    ```bash
    git checkout -b feature-name
    ```
-3. Commit your changes:
+3. Make your changes and ensure they pass the linting checks.
+4. Commit your changes:
    ```bash
    git commit -m "Add feature description"
    ```
-4. Push to your branch:
+   Note: The pre-commit hook will automatically run ESLint and Prettier before allowing the commit.
+5. Push to your branch:
    ```bash
    git push origin feature-name
    ```
-5. Open a pull request.
+6. Open a pull request.
 
 ## Contact
 
