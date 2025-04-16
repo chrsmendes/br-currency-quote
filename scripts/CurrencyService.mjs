@@ -48,10 +48,12 @@ class CurrencyService {
 
             // Map flags to currencies
             const currenciesWithFlags = data.map(currency => {
-                const flagInfo = flagsData.find(flag => flag.code === currency.simbolo);
+                const flagInfo = Array.isArray(flagsData)
+                    ? flagsData.find(flag => flag.code === currency.simbolo)
+                    : null;
                 return {
                     ...currency,
-                    flag: flagInfo ? flagInfo.flag : null
+                    flag: flagInfo ? flagInfo.flag : 'default-flag-url' // Provide a default flag URL or null
                 };
             });
 
