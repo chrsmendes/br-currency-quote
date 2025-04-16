@@ -15,6 +15,9 @@ export default class UIController {
    * @returns {void}
    */
   static initialize() {
+    // Apply saved theme from localStorage
+    this.applySavedTheme();
+
     // Initialize theme toggle functionality
     this.initializeThemeToggle();
 
@@ -25,6 +28,26 @@ export default class UIController {
     const resultDiv = document.getElementById("result");
     if (resultDiv) {
       resultDiv.innerHTML = "";
+    }
+  }
+
+  /**
+   * Applies the saved theme from localStorage (or defaults to light).
+   * Should be called before any UI is rendered.
+   * @static
+   * @returns {void}
+   */
+  static applySavedTheme() {
+    const savedTheme = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-bs-theme", savedTheme);
+    // Optionally update the toggle button icon if present
+    const themeToggle = document.querySelector(".theme-toggle");
+    if (themeToggle) {
+      if (savedTheme === "dark") {
+        themeToggle.innerHTML = '<i class="bi bi-sun-fill"></i>';
+      } else {
+        themeToggle.innerHTML = '<i class="bi bi-moon-stars-fill"></i>';
+      }
     }
   }
 
