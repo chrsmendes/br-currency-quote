@@ -20,7 +20,7 @@ The **Brazilian Currency Quote System** is a web application designed to provide
 
 ## Project Structure
 
-```
+```text
 br-currency-quote/
 ├── .github/
 │   └── workflows/

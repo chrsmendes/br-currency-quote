@@ -74,7 +74,7 @@ export default class UIController {
             <img src="${currency.flag}" alt="${currency.nome} flag" width="25" height="25"> ${currency.simbolo}
         </a>`;
 
-        listItem.addEventListener('click', function (e) {
+        listItem.addEventListener('click', function () {
             const dropdownContainer = this.closest('.dropdown');
             const selectedDropdown = dropdownContainer.querySelector('.selected-dropdown');
             selectedDropdown.innerHTML = this.innerHTML;

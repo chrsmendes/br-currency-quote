@@ -15,7 +15,7 @@ export function renderExchangeRateChart(data, chartId = 'exchangeRateChart') {
     canvas.style.maxWidth = '700px';
     canvas.style.maxHeight = '400px';
 
-    new Chart(canvas, {
+    new chartId(canvas, {
         type: 'line',
         data: {
             labels: labels,

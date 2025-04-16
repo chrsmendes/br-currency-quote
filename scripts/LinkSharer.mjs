@@ -1,6 +1,3 @@
-import CurrencyService from './CurrencyService.mjs';
-import UIController from './UIController.mjs';
-
 /**
  * LinkSharer module for creating and handling shareable links with query parameters.
  */
