@@ -107,6 +107,14 @@ A pre-commit hook is set up to run ESLint and Prettier on your files before each
 
 The project is automatically deployed to GitHub Pages using a GitHub Actions workflow. Any changes pushed to the `main` branch will trigger a deployment. Pull requests also get preview deployments available at a dedicated URL.
 
+### Continuous Integration
+
+This project uses GitHub Actions for continuous integration to ensure code quality:
+
+- **Automated Linting**: All pushes to the main branch and pull requests are automatically checked with ESLint and Prettier
+- **Quality Gates**: Deployments will only proceed if all linting checks pass
+- **Preview Environments**: Pull requests generate preview environments with URLs commented directly on the PR
+
 ## Contributing
 
 Contributions are welcome! Please follow these steps:
