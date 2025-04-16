@@ -1,3 +1,6 @@
+// Get Chart from the global scope since it's loaded via CDN in HTML
+const Chart = window.Chart;
+
 export function renderExchangeRateChart(data, chartId = 'exchangeRateChart') {
     if (!Array.isArray(data.cotacoes) || data.cotacoes.length === 0) {
         throw new Error('Invalid or empty cotacoes array');
@@ -15,7 +18,7 @@ export function renderExchangeRateChart(data, chartId = 'exchangeRateChart') {
     canvas.style.maxWidth = '700px';
     canvas.style.maxHeight = '400px';
 
-    new chartId(canvas, {
+    new Chart(canvas, {
         type: 'line',
         data: {
             labels: labels,
