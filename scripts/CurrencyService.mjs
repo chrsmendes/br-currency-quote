@@ -53,7 +53,7 @@ class CurrencyService {
                     : null;
                 return {
                     ...currency,
-                    flag: flagInfo ? flagInfo.flag : 'default-flag-url' // Provide a default flag URL or null
+                    flag: flagInfo?.flag ?? 'https://files.softicons.com/download/internet-cons/flag-icons-by-custom-icon-design/png/32/European-Union-Flag.png'
                 };
             });
 
@@ -112,7 +112,6 @@ class CurrencyService {
                 });
             }
 
-            // Save to local storage if not today's date
             HistoryTracker.saveExchangeRate(currency, date, data);
 
             return data;
