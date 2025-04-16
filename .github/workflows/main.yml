@@ -6,6 +6,7 @@ description: |
   - On push to gh-pages: It skips any action, as gh-pages is the deployment branch for GitHub Pages.
   - If gh-pages doesn’t exist: It creates an empty gh-pages branch.
   The workflow can also be triggered manually via workflow_dispatch.
+  - Includes linting checks to enforce code quality standards before deployment.
 
 on:
   push:
@@ -25,10 +26,75 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    # Skip linting on gh-pages branch
+    if: github.ref != 'refs/heads/gh-pages'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          # Removed cache option that was causing the error
+
+      - name: Install dependencies
+        run: npm install
+        # Changed from 'npm ci' to 'npm install' since there's no lock file
+
+      - name: Run ESLint
+        run: npx eslint . --ext .js,.mjs
+
+      - name: Check Prettier formatting
+        run: |
+          echo "Running Prettier check..."
+          if ! npx prettier --check "**/*.{js,mjs,json,md,css}"; then
+            echo "::error::Prettier check failed. See formatting instructions below."
+            echo "
+          ----------------------------------------
+          ## Prettier Formatting Issues Detected
+
+          The failing job is caused by code style issues detected by Prettier. 
+
+          ### Solution
+          You can resolve this issue by running Prettier locally to auto-format the code and then committing the changes. Here's how to proceed:
+
+          1. **Install Prettier** (if not already installed):
+             \`\`\`sh
+             npm install --save-dev prettier
+             \`\`\`
+
+          2. **Run Prettier to fix formatting issues**:
+             \`\`\`sh
+             npx prettier --write "**/*.{js,mjs,json,md,css}"
+             \`\`\`
+
+          3. **Verify the formatting** to ensure all issues are resolved:
+             \`\`\`sh
+             npx prettier --check "**/*.{js,mjs,json,md,css}"
+             \`\`\`
+
+          4. **Commit and push the changes**:
+             \`\`\`sh
+             git add .
+             git commit -m \"Fix code formatting issues\"
+             git push origin main
+             \`\`\`
+          ----------------------------------------
+          "
+            exit 1
+          fi
+
   deploy:
     environment:
       name: github-pages
     runs-on: ubuntu-latest
+    # Make deploy job run after successful lint job for main branch and PRs
+    needs: lint
+    if: always() && (needs.lint.result == 'success' || needs.lint.result == 'skipped')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
