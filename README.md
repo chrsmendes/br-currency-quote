@@ -4,44 +4,77 @@ The **Brazilian Currency Quote System** is a web application designed to provide
 
 ## Features
 
-- **Real-Time Exchange Rates**: Get up-to-date exchange rates for the Brazilian Real (BRL).
+- **Real-Time Exchange Rates**: Get up-to-date exchange rates for the Brazilian Real (BRL) against foreign currencies.
+- **Historical Data**: Look up exchange rates for specific dates in the past.
+- **Custom Amount Conversion**: Convert any amount between BRL and foreign currencies.
+- **Data Visualization**: View exchange rate charts to visualize rate changes.
 - **Responsive Design**: Optimized for both desktop and mobile devices.
 - **Theme Toggle**: Switch between light and dark themes for better accessibility.
-- **Social Media Integration**: Links to social media profiles for easy sharing.
+- **Shareable Links**: Generate and share specific currency conversion links.
+- **Local Storage**: Save previous queries for faster access when revisiting.
 - **PWA Support**: Includes a manifest file for Progressive Web App functionality.
 
 ## Technologies Used
 
 - **HTML5**: For structuring the web pages.
 - **CSS3**: Custom styles and Bootstrap for responsive design.
-- **JavaScript**: For interactivity, including theme toggling.
-- **Bootstrap 5**: For pre-styled components and layout.
-- **GitHub Pages**: For hosting the static site.
+- **JavaScript (ES6+)**: Modular JavaScript using ES modules for better organization.
+- **Bootstrap 5**: For responsive design and pre-styled components.
+- **Chart.js**: For visualizing exchange rate data.
+- **BrasilAPI**: Data source for currency exchange rates.
+- **localStorage API**: For caching exchange rate data and user preferences.
+- **GitHub Pages**: For hosting the application.
+- **ESLint**: For code quality and consistent style.
+- **Husky**: For Git hooks to enforce code quality standards.
+- **lint-staged**: For running linters on staged Git files.
+- **Prettier**: For consistent code formatting.
 
 ## Project Structure
 
-```
+```text
 br-currency-quote/
 ├── .github/
 │   └── workflows/
-│       └── static.yml       # GitHub Actions workflow for deployment
-├── images/                  # Icons and logo assets
+│       └── main.yml       # GitHub Actions workflow for deployment with PR previews
+├── .husky/                # Git hooks for code quality enforcement
+│   └── pre-commit         # Pre-commit hook to run linters before committing
+├── images/                # Icons and logo assets
 ├── scripts/
-│   └── scripts.js           # Custom JavaScript for interactivity
+│   ├── ChartRenderer.mjs  # Chart.js integration for data visualization
+│   ├── CurrencyConversion.mjs # Handles currency conversion calculations
+│   ├── CurrencyService.mjs # API service for fetching exchange rates
+│   ├── HistoryTracker.mjs # Manages local storage of exchange rate history
+│   ├── LinkSharer.mjs     # Handles creation and parsing of shareable links
+│   ├── scripts.js         # Main entry point for JavaScript
+│   └── UIController.mjs   # Manages the user interface and interactions
 ├── styles/
-│   └── styles.css           # Custom CSS for styling
-├── index.html               # Main HTML file
-├── manifest.json            # PWA manifest file
-├── browserconfig.xml        # Browser configuration for Microsoft tiles
-└── README.md                # Project documentation
+│   └── styles.css         # Custom CSS styles
+├── index.html             # Main HTML file
+├── manifest.json          # PWA manifest file
+├── browserconfig.xml      # Browser configuration for Microsoft tiles
+├── eslint.config.mjs      # ESLint configuration file
+├── package.json           # Node.js package configuration
+└── README.md              # Project documentation
 ```
+
+## How It Works
+
+1. The application fetches currency data from the BrasilAPI.
+2. Users can select a source currency, target currency, amount, and date.
+3. When the form is submitted, the application fetches the exchange rate and calculates the conversion.
+4. Results are displayed with visual charts for better understanding.
+5. Users can generate shareable links to specific conversions.
+6. The application caches previous queries in localStorage for faster access.
 
 ## Accessibility
 
 This project follows accessibility best practices:
 
-- Buttons and links have accessible names using `aria-label` attributes.
-- Semantic HTML is used for better screen reader support.
+- Theme toggle for better readability (light/dark mode)
+- Semantic HTML structure for screen readers
+- ARIA attributes for interactive elements
+- Keyboard navigation support
+- High contrast ratio for text elements
 
 ## How to Run Locally
 
@@ -53,11 +86,34 @@ This project follows accessibility best practices:
    ```bash
    cd br-currency-quote
    ```
-3. Open `index.html` in your browser.
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Open `index.html` in your browser.
+
+## Development
+
+This project uses several tools to maintain code quality:
+
+- **ESLint**: Checks JavaScript code for quality and adherence to style guidelines
+- **Prettier**: Formats code consistently across the project
+- **Husky**: Manages Git hooks to automate quality checks
+- **lint-staged**: Runs linters only on staged Git files for better performance
+
+A pre-commit hook is set up to run ESLint and Prettier on your files before each commit. This ensures that all code committed to the repository maintains consistent style and passes linting rules. If any issues are found that can't be automatically fixed, the commit will be blocked until you resolve them.
 
 ## Deployment
 
-The project is automatically deployed to GitHub Pages using a GitHub Actions workflow. Any changes pushed to the `main` branch will trigger a deployment.
+The project is automatically deployed to GitHub Pages using a GitHub Actions workflow. Any changes pushed to the `main` branch will trigger a deployment. Pull requests also get preview deployments available at a dedicated URL.
+
+### Continuous Integration
+
+This project uses GitHub Actions for continuous integration to ensure code quality:
+
+- **Automated Linting**: All pushes to the main branch and pull requests are automatically checked with ESLint and Prettier
+- **Quality Gates**: Deployments will only proceed if all linting checks pass
+- **Preview Environments**: Pull requests generate preview environments with URLs commented directly on the PR
 
 ## Contributing
 
@@ -68,15 +124,17 @@ Contributions are welcome! Please follow these steps:
    ```bash
    git checkout -b feature-name
    ```
-3. Commit your changes:
+3. Make your changes and ensure they pass the linting checks.
+4. Commit your changes:
    ```bash
    git commit -m "Add feature description"
    ```
-4. Push to your branch:
+   Note: The pre-commit hook will automatically run ESLint and Prettier before allowing the commit.
+5. Push to your branch:
    ```bash
    git push origin feature-name
    ```
-5. Open a pull request.
+6. Open a pull request.
 
 ## Contact
 
