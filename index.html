@@ -82,7 +82,8 @@
         </nav>
     </div>
 
-    <div class="container mt-5 mb-5 test" id="main-content">
+    <!-- Main Content -->
+    <div class="container mt-5 mb-5" id="main-content">
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
                 <!-- Share Button -->
@@ -93,6 +94,82 @@
 
                 <h1 class="text-center mb-4">Brazilian Currency Quote System</h1>
                 <h2 class="card-title text-center mb-4">BRL to Anything...</h2>
+
+                <!-- Exchange Rate Form -->
+                <form id="exchange-form" class="needs-validation" novalidate>
+                    <div class="row g-3 mb-3">
+                        <!-- Amount Input -->
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="number" id="amount" name="amount" class="form-control"
+                                    placeholder="Enter amount" step="0.01" required min="0.01">
+                                <label for="amount">Amount</label>
+                                <div class="invalid-feedback">
+                                    Please enter a valid amount (e.g., 10.50).
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Source Currency Dropdown -->
+                        <div class="col-md-6">
+                            <div class="dropdown form-floating">
+                                <div class="form-control d-flex justify-content-between" id="currency-container"
+                                    data-bs-toggle="dropdown" tabindex="0" role="combobox" data-required="true"
+                                    aria-expanded="false" aria-controls="currency-list" aria-label="Currency"
+                                    aria-labelledby="currency-label">
+                                    <span class="selected-dropdown" id="currency-span"></span>
+                                    <span class="dropdown-toggle"></span>
+                                </div>
+                                <label id="currency-label" class="form-label">Currency</label>
+                                <div class="invalid-feedback">
+                                    Please select one currency.
+                                </div>
+                                <ul class="dropdown-menu w-100" aria-labelledby="currency-container" id="currency-list"
+                                    role="listbox">
+                                    <!-- Currency options will be dynamically populated by JavaScript -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <!-- Target Currency Dropdown -->
+                        <div class="col-md-6">
+                            <div class="dropdown form-floating">
+                                <div class="form-control d-flex justify-content-between"
+                                    id="conversion-currency-container" data-bs-toggle="dropdown" tabindex="0"
+                                    role="combobox" data-required="true" aria-expanded="false"
+                                    aria-controls="conversion-currency-list" aria-label="Conversion Currency"
+                                    aria-labelledby="conversion-currency-label">
+                                    <span class="selected-dropdown" id="conversion-currency-span"></span>
+                                    <span class="dropdown-toggle"></span>
+                                </div>
+                                <label id="conversion-currency-label" class="form-label">Conversion Currency</label>
+                                <ul class="dropdown-menu w-100" aria-labelledby="conversion-currency-container"
+                                    id="conversion-currency-list" role="listbox">
+                                    <!-- Conversion currency options will be dynamically populated by JavaScript -->
+                                </ul>
+                                <div class="invalid-feedback">
+                                    Please select one conversion currency.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Date Picker -->
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="date" id="date" name="date" class="form-control" min="1984-11-28" required>
+                                <label for="date">Select Date</label>
+                                <div class="invalid-feedback">
+                                    Please select a valid date.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary w-100 btn-lg">Get Exchange Rate</button>
+                </form>
 
                 <!-- Results Display Area -->
                 <div id="result" class="mt-4 align-self-center"></div>
