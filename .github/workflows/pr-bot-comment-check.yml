@@ -1,0 +1,34 @@
+name: Check PR Bot Comment and Last Action
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  check-bot-comment-and-status:
+    if: |
+      github.event.comment.user.login == 'github-actions[bot]' &&
+      contains(github.event.comment.body, 'Update PR #')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check last workflow run status for PR
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const core = require('@actions/core');
+            const prNumber = context.payload.issue.number;
+            const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event: 'pull_request',
+              per_page: 5
+            });
+            // Find the latest run for this PR
+            const run = runs.workflow_runs.find(r => r.pull_requests.some(pr => pr.number === prNumber));
+            if (!run) {
+              core.setFailed('No workflow run found for this PR.');
+            } else if (run.conclusion === 'success') {
+              console.log('Last workflow run succeeded.');
+            } else {
+              core.setFailed('Last workflow run did not succeed.');
+            }
