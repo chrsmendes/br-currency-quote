@@ -38,7 +38,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
           # Removed cache option that was causing the error
 
       - name: Install dependencies
@@ -49,7 +49,44 @@ jobs:
         run: npx eslint . --ext .js,.mjs
 
       - name: Check Prettier formatting
-        run: npx prettier --check "**/*.{js,mjs,json,md,css}"
+        run: |
+          echo "Running Prettier check..."
+          if ! npx prettier --check "**/*.{js,mjs,json,md,css}"; then
+            echo "::error::Prettier check failed. See formatting instructions below."
+            echo "
+          ----------------------------------------
+          ## Prettier Formatting Issues Detected
+
+          The failing job is caused by code style issues detected by Prettier. 
+
+          ### Solution
+          You can resolve this issue by running Prettier locally to auto-format the code and then committing the changes. Here's how to proceed:
+
+          1. **Install Prettier** (if not already installed):
+             \`\`\`sh
+             npm install --save-dev prettier
+             \`\`\`
+
+          2. **Run Prettier to fix formatting issues**:
+             \`\`\`sh
+             npx prettier --write "**/*.{js,mjs,json,md,css}"
+             \`\`\`
+
+          3. **Verify the formatting** to ensure all issues are resolved:
+             \`\`\`sh
+             npx prettier --check "**/*.{js,mjs,json,md,css}"
+             \`\`\`
+
+          4. **Commit and push the changes**:
+             \`\`\`sh
+             git add .
+             git commit -m \"Fix code formatting issues\"
+             git push origin main
+             \`\`\`
+          ----------------------------------------
+          "
+            exit 1
+          fi
 
   deploy:
     environment:
