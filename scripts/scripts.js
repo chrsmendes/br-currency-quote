@@ -1,5 +1,8 @@
-import CurrencyService from "./CurrencyService.mjs";
+// Apply saved theme before anything else
 import UIController from "./UIController.mjs";
+UIController.applySavedTheme();
+
+import CurrencyService from "./CurrencyService.mjs";
 import LinkSharer from "./LinkSharer.mjs";
 
 document.addEventListener("DOMContentLoaded", async () => {
