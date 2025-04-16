@@ -10,12 +10,12 @@ const customPlugins = {
   // Custom prettier plugin with formatting help rule
   prettier: {
     rules: {
-      'formatting-help': {
+      "formatting-help": {
         meta: {
-          type: 'suggestion',
+          type: "suggestion",
           docs: {
-            description: 'Enforce code formatting standards with Prettier',
-            category: 'Formatting',
+            description: "Enforce code formatting standards with Prettier",
+            category: "Formatting",
             recommended: true,
           },
           messages: {
@@ -46,37 +46,77 @@ You can resolve this issue by running Prettier locally to auto-format the code a
    git commit -m "Fix code formatting issues"
    git push origin main
    \`\`\`
-            `
-          }
+            `,
+          },
         },
         create(context) {
           return {
             Program(node) {
               context.report({
                 node,
-                messageId: 'formattingHelp',
+                messageId: "formattingHelp",
               });
             },
           };
-        }
-      }
-    }
-  }
+        },
+      },
+    },
+  },
 };
 
 export default defineConfig([
-  { ignores: ["node_modules/", "browserconfig.xml", "manifest.json", "package-lock.json", "es"] },
-  { files: ["**/*.{js,mjs,cjs}"], plugins: { js }, extends: ["js/recommended"] },
-  { files: ["**/*.{js,mjs,cjs}"], languageOptions: { globals: globals.browser } },
+  {
+    ignores: [
+      "node_modules/",
+      "browserconfig.xml",
+      "manifest.json",
+      "package-lock.json",
+      "es",
+    ],
+  },
+  {
+    files: ["**/*.{js,mjs,cjs}"],
+    plugins: { js },
+    extends: ["js/recommended"],
+  },
+  {
+    files: ["**/*.{js,mjs,cjs}"],
+    languageOptions: { globals: globals.browser },
+  },
   // Add custom formatting help rule with proper plugin definition
   {
     files: ["**/*.{js,mjs,cjs,json,jsonc,json5,md,css}"],
     plugins: { prettier: customPlugins.prettier },
-    rules: { 'prettier/formatting-help': 'warn' }
+    rules: { "prettier/formatting-help": "warn" },
   },
-  { files: ["**/*.json"], plugins: { json }, language: "json/json", extends: ["json/recommended"] },
-  { files: ["**/*.jsonc"], plugins: { json }, language: "json/jsonc", extends: ["json/recommended"] },
-  { files: ["**/*.json5"], plugins: { json }, language: "json/json5", extends: ["json/recommended"] },
-  { files: ["**/*.md"], plugins: { markdown }, language: "markdown/gfm", extends: ["markdown/recommended"] },
-  { files: ["**/*.css"], plugins: { css }, language: "css/css", extends: ["css/recommended"] },
+  {
+    files: ["**/*.json"],
+    plugins: { json },
+    language: "json/json",
+    extends: ["json/recommended"],
+  },
+  {
+    files: ["**/*.jsonc"],
+    plugins: { json },
+    language: "json/jsonc",
+    extends: ["json/recommended"],
+  },
+  {
+    files: ["**/*.json5"],
+    plugins: { json },
+    language: "json/json5",
+    extends: ["json/recommended"],
+  },
+  {
+    files: ["**/*.md"],
+    plugins: { markdown },
+    language: "markdown/gfm",
+    extends: ["markdown/recommended"],
+  },
+  {
+    files: ["**/*.css"],
+    plugins: { css },
+    language: "css/css",
+    extends: ["css/recommended"],
+  },
 ]);
